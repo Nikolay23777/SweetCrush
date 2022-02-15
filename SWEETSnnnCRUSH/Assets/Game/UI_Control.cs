@@ -13,6 +13,7 @@ using UnityEngine.SceneManagement;
 using GooglePlayGames;
 using GooglePlayGames.BasicApi;
 using UnityEngine.SocialPlatforms;
+using Yodo1.MAS;
 
 
 //using AppodealAds.Unity.Api;
@@ -309,7 +310,11 @@ namespace Destructible2D
         public Sprite play2;
         public Text ttt1;
         public Text ttt2;//тексты
-        
+        private void Awake()
+        {
+            Yodo1AdBuildConfig config = new Yodo1AdBuildConfig().enableUserPrivacyDialog(true);
+            Yodo1U3dMas.SetAdBuildConfig(config);
+        }
         public void BTN_KONKURS_PLAY()
         {
             KONKURS_play.SetActive(true);
@@ -388,6 +393,23 @@ namespace Destructible2D
         }
         void Start()
         {
+            
+            Yodo1U3dMas.InitializeSdk();
+            Yodo1U3dMasCallback.OnSdkInitializedEvent += (success, error) =>
+            {
+                Debug.Log("[Yodo1 Mas] OnSdkInitializedEvent, success:" + success + ", error: " + error.ToString());
+                if (success)
+                {
+                    Debug.Log("[Yodo1 Mas] The initialization has succeeded");
+                }
+                else
+                {
+                    Debug.Log("[Yodo1 Mas] The initialization has failed");
+                }
+            };
+            InitBanner();
+            InitializeInterstitialAds();
+            InitializeRewardedAds();
             GEN.issladost = new bool[] { true,true,true};
            //is_normal = true;  //в начале обычный режим
            CHETCHIK_type_game = 0;
@@ -432,7 +454,7 @@ namespace Destructible2D
                   //  test.text = test.text + "-";
                 }
             });
-            
+
             ///////////////////////////////
             ///
             /*
@@ -442,6 +464,7 @@ namespace Destructible2D
                 Appodeal.show(Appodeal.BANNER_BOTTOM);
             }
             */
+            BannerBottom();
             // test.text = "999";
             /*
             if (platform == null) {
@@ -486,7 +509,31 @@ namespace Destructible2D
               */
 
         }
-        
+        private void InitializeInterstitialAds()
+        {
+            
+            Yodo1U3dMasCallback.Interstitial.OnAdOpenedEvent +=
+            OnInterstitialAdOpenedEvent;
+            Yodo1U3dMasCallback.Interstitial.OnAdClosedEvent +=
+            OnInterstitialAdClosedEvent;
+            Yodo1U3dMasCallback.Interstitial.OnAdErrorEvent +=
+            OnInterstitialAdErorEvent;
+        }
+
+        private void OnInterstitialAdOpenedEvent()
+        {
+            Debug.Log("[Yodo1 Mas] Interstitial ad opened");
+        }
+
+        private void OnInterstitialAdClosedEvent()
+        {
+            Debug.Log("[Yodo1 Mas] Interstitial ad closed");
+        }
+
+        private void OnInterstitialAdErorEvent(Yodo1U3dAdError adError)
+        {
+            Debug.Log("[Yodo1 Mas] Interstitial ad error - " + adError.ToString());
+        }
         #region Achivments
         private void Get_Achivments(String id)
         {
@@ -517,10 +564,75 @@ namespace Destructible2D
         #endregion 
 
             //вКЛЮЧНИЕ ВЫКЛЮЧЕНИЕ НАСТРОЕК
+
         public void BTN_SETTING_UP()
         {
             Setting.SetActive(true);
             dw.value = CHETCHIK_type_game ;
+        }
+        private Yodo1U3dBannerAdView bannerAdView;
+        void InitBanner()
+        {
+            // Clean up banner before reusing
+            if (bannerAdView != null)
+            {
+                bannerAdView.Destroy();
+            }
+
+            // Create a 320x50 banner at top of the screen
+            BannerBottom();
+        }
+
+        void BannerBottom()
+        {
+            if (bannerAdView != null)
+            {
+                bannerAdView.Show();
+
+            }
+            else
+            {
+                bannerAdView = new Yodo1U3dBannerAdView(Yodo1U3dBannerAdSize.Banner,
+                   Yodo1U3dBannerAdPosition.BannerBottom | Yodo1U3dBannerAdPosition.BannerHorizontalCenter);
+                bannerAdView.LoadAd();
+            }
+        }
+        private void InitializeRewardedAds()
+        {
+            // Add Events
+            Yodo1U3dMasCallback.Rewarded.OnAdOpenedEvent += OnRewardedAdOpenedEvent;
+            Yodo1U3dMasCallback.Rewarded.OnAdClosedEvent += OnRewardedAdClosedEvent;
+            Yodo1U3dMasCallback.Rewarded.OnAdReceivedRewardEvent += OnAdReceivedRewardEvent;
+            Yodo1U3dMasCallback.Rewarded.OnAdErrorEvent += OnRewardedAdErorEvent;
+        }
+
+        private void OnRewardedAdOpenedEvent()
+        {
+            Debug.Log("[Yodo1 Mas] Rewarded ad opened");
+        }
+
+        private void OnRewardedAdClosedEvent()
+        {
+            Debug.Log("[Yodo1 Mas] Rewarded ad closed");
+        }
+
+        private void OnAdReceivedRewardEvent()
+        {
+            onRewardedVideoShown();
+            Debug.Log("[Yodo1 Mas] Rewarded ad received reward");
+        }
+
+        private void OnRewardedAdErorEvent(Yodo1U3dAdError adError)
+        {
+            Debug.Log("[Yodo1 Mas] Rewarded ad error - " + adError.ToString());
+        }
+        void HideBanner()
+        {
+            if (bannerAdView != null)
+            {
+                bannerAdView.Hide();
+            }
+            
         }
         public void BTN_SETTING_DOWN()
         {
@@ -545,6 +657,11 @@ namespace Destructible2D
         {
             //запуск ролика
             //Appodeal.show(Appodeal.NON_SKIPPABLE_VIDEO);
+            bool isLoaded = Yodo1U3dMas.IsRewardedAdLoaded();
+            if (isLoaded)
+            {
+                Yodo1U3dMas.ShowRewardedAd();
+            }
             /*
             if (Appodeal.isLoaded(Appodeal.REWARDED_VIDEO))
             {
@@ -652,6 +769,7 @@ namespace Destructible2D
                 Appodeal.show(Appodeal.BANNER_BOTTOM);
             }
             */
+            BannerBottom();
             GEN_BASGROUND();
             Saund_musik.volume = 0.25f;
             ISPLAY = false;
@@ -723,6 +841,11 @@ namespace Destructible2D
                     Appodeal.show(Appodeal.INTERSTITIAL);
                 }
                 */
+                bool isLoaded = Yodo1U3dMas.IsInterstitialAdLoaded();
+                if (isLoaded)
+                {
+                    Yodo1U3dMas.ShowInterstitialAd();
+                }
             }
             level_coin_podret = 0;
             /*
@@ -779,24 +902,25 @@ namespace Destructible2D
             */
 
 
-          //  btn_restart.SetActive(true);
-           // btn_restart.GetComponent<Animation>().Play();
-           /*
-            if (Appodeal.isLoaded(Appodeal.REWARDED_VIDEO))
-            {
-                btn_restart.SetActive(true);
-                btn_restart.GetComponent<Animation>().Play();
+            //  btn_restart.SetActive(true);
+            // btn_restart.GetComponent<Animation>().Play();
+            /*
+             if (Appodeal.isLoaded(Appodeal.REWARDED_VIDEO))
+             {
+                 btn_restart.SetActive(true);
+                 btn_restart.GetComponent<Animation>().Play();
 
-            }
-            else
-            {
-               
-            }
-            if (Appodeal.isLoaded(Appodeal.BANNER))
-            {
-                Appodeal.show(Appodeal.BANNER_BOTTOM);
-            }
-           */
+             }
+             else
+             {
+
+             }
+             if (Appodeal.isLoaded(Appodeal.BANNER))
+             {
+                 Appodeal.show(Appodeal.BANNER_BOTTOM);
+             }
+            */
+            BannerBottom();
 
         }
         private void GEN_TIME()
@@ -860,7 +984,8 @@ namespace Destructible2D
             // COIN.GetComponent<Animation>().enabled = false;
             //  RectTransform ggg;
             // COIN.GetComponent<RectTransform>().rect = ggg;
-         //   Appodeal.hide(Appodeal.BANNER);
+            //   Appodeal.hide(Appodeal.BANNER);
+            HideBanner();
            
         }
 
@@ -877,6 +1002,7 @@ namespace Destructible2D
                 Appodeal.show(Appodeal.BANNER_BOTTOM);
             }
             */
+            BannerBottom();
 
         }
         //при возвращение с паузы
@@ -884,7 +1010,8 @@ namespace Destructible2D
         {
             pause.SetActive(false);
             Time.timeScale = 1;
-          //  Appodeal.hide(Appodeal.BANNER);
+            //  Appodeal.hide(Appodeal.BANNER);
+            HideBanner();
 
         }
         
@@ -913,8 +1040,8 @@ namespace Destructible2D
                 Appodeal.show(Appodeal.BANNER_BOTTOM);
             }
             */
-
-
+            BannerBottom();
+          
 
             //SceneManager.LoadScene("Game");
             // SceneManager.LoadScene(SceneManager.GetActiveScene().name);

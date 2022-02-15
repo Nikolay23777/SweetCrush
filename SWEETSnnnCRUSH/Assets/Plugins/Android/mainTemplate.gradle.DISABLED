@@ -14,6 +14,15 @@
             url "https://maven.google.com"
         }
         maven {
+            url "https://artifact.bytedance.com/repository/pangle/" // Assets/Yodo1/MAS/Editor/Dependencies/Yodo1MasAndroidDependencies.xml:8
+        }
+        maven {
+            url "https://android-sdk.is.com/" // Assets/Yodo1/MAS/Editor/Dependencies/Yodo1MasAndroidDependencies.xml:8
+        }
+        maven {
+            url "https://sdk.tapjoy.com/" // Assets/Yodo1/MAS/Editor/Dependencies/Yodo1MasAndroidDependencies.xml:8
+        }
+        maven {
             url (unityProjectPath + "/Assets/GeneratedLocalRepo/GooglePlayGames/Editor/m2repository") // Assets/GooglePlayGames/Editor/GooglePlayGamesPluginDependencies.xml:11
         }
         mavenLocal()
@@ -29,6 +38,7 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 // Android Resolver Dependencies Start
     implementation 'com.google.games:gpgs-plugin-support:0.10.09' // Assets/GooglePlayGames/Editor/GooglePlayGamesPluginDependencies.xml:11
+    implementation 'com.yodo1.mas:full:4.5.0' // Assets/Yodo1/MAS/Editor/Dependencies/Yodo1MasAndroidDependencies.xml:9
 // Android Resolver Dependencies End
 **DEPS**}
 

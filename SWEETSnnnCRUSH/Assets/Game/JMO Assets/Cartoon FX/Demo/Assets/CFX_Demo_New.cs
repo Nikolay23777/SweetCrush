@@ -3,7 +3,6 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-
 // Cartoon FX - (c) 2015 - Jean Moreno
 //
 // Script handling the Demo scene of the Cartoon FX Packs
@@ -38,6 +37,7 @@ public class CFX_Demo_New : MonoBehaviour
 	
 	void Awake()
 	{
+		
 		List<GameObject> particleExampleList = new List<GameObject>();
 		int nbChild = this.transform.childCount;
 		for(int i = 0; i < nbChild; i++)
